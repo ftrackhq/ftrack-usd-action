@@ -26,31 +26,39 @@ class USDAction(BaseAction):
         return True
 
     def launch(self, session, entities, event):
-        
+        usd_stage = Usd.Stage.CreateNew('HelloWorld.usda')
+
         entity_type, entity_id = entities[0]
         root = self.session.get(entity_type, entity_id)
 
         while root['descendants']:
             for child in root['descendants']:
-                placement =  '/'.join([link['name'] for link in child['link']])
-                print placement
-                asset_versions = session.query(
-                    'select components from AssetVersion where task.id is "{}"'.format(child['id'])
-                ).all()
-                for asset_version in asset_versions:
-                    for component in asset_version['components']:
-                        print component
-                        # file_path = None
-                        # try:
-                        #     file_path =  location.get_filesystem_path(component)
-                        # except Exception as error:
-                        #     print error
-                        #     pass
+                # placement =  '/{0}'.format('/'.join([link['name'] for link in child['link']]))
+                links = [l['name'] for l in child['link']]
+                link = ''
+                for clink in links:
+                    link += '/'+ clink
+                    print link
+                    # xformPrim = UsdGeom.Xform.Define(usd_stage, link)
 
-                        # if file_path and os.path.splitext(filepath)[-1] == '.usd':
-                        #     print filepath
+                # asset_versions = session.query(
+                #     'select components from AssetVersion where task.id is "{}"'.format(child['id'])
+                # ).all()
+                # for asset_version in asset_versions:
+                #     for component in asset_version['components']:
+                #         print component
+                #         file_path = None
+                #         try:
+                #             file_path =  location.get_filesystem_path(component)
+                #         except Exception as error:
+                #             print error
+                #             pass
+
+                #         if file_path and os.path.splitext(filepath)[-1] == '.usd':
+                #             print filepath
 
                 root = child
+        # usd_stage.GetRootLayer().Save()
 
         return {
             'success': True,
