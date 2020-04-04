@@ -3,6 +3,7 @@
 # :copyright: Copyright (c) 2019 ftrack
 
 import logging
+import tempfile
 
 from ftrack_action_handler.action import BaseAction
 import ftrack_api
@@ -17,48 +18,70 @@ class USDAction(BaseAction):
     label = 'Usd builder'
     identifier = 'com.ftrack.recipes.usd_builder'
     description = 'Create and publish UDS based on selected entity child.'
+    asset_name = 'USD Scene'
 
     def discover(self, session, entities, event):
         # available on any entity
         if not entities:
             return False
-        
-        return True
+
+        for entity_type, entity_id in entities:
+            if entity_type != 'Project':
+                return True
+
+        return False
 
     def launch(self, session, entities, event):
-        usd_stage = Usd.Stage.CreateNew('HelloWorld.usda')
+        temp = tempfile.NamedTemporaryFile(suffix='.usda').name
+        usd_stage = Usd.Stage.CreateNew(temp)
 
         entity_type, entity_id = entities[0]
         root = self.session.get(entity_type, entity_id)
 
         while root['descendants']:
+            # ctx_path = None
+            # xformPrim = None
             for child in root['descendants']:
-                # placement =  '/{0}'.format('/'.join([link['name'] for link in child['link']]))
-                links = [l['name'] for l in child['link']]
-                link = ''
-                for clink in links:
-                    link += '/'+ clink
-                    print link
-                    # xformPrim = UsdGeom.Xform.Define(usd_stage, link)
 
-                # asset_versions = session.query(
-                #     'select components from AssetVersion where task.id is "{}"'.format(child['id'])
-                # ).all()
-                # for asset_version in asset_versions:
-                #     for component in asset_version['components']:
-                #         print component
-                #         file_path = None
-                #         try:
-                #             file_path =  location.get_filesystem_path(component)
-                #         except Exception as error:
-                #             print error
-                #             pass
-
-                #         if file_path and os.path.splitext(filepath)[-1] == '.usd':
-                #             print filepath
+                ctx_path =  '/{}'.format(
+                    '/'.join(
+                        [
+                            '_'.join(
+                                [session.get(l['type'],l['id']).entity_type, 
+                                l['name']]
+                            ) 
+                            for l in child['link']
+                        ]
+                    )
+                ).replace(' ', '_').lower()
+                xform = usd_stage.DefinePrim(ctx_path, 'Xform')
 
                 root = child
-        # usd_stage.GetRootLayer().Save()
+        
+        usd_stage.GetRootLayer().Save()
+
+        # publish to context
+        asset_type = session.query('AssetType where name is "scene"').one()
+
+        asset = session.query(
+            'Asset where name is "{}" and parent.id is "{}" and type.id is "{}"'.format(
+                self.asset_name, root['parent']['id'], asset_type['id']
+            )
+        ).first()
+
+        if not asset:
+            asset = session.create('Asset', {
+                'name': self.asset_name,
+                'type': asset_type,
+                'parent': root['parent']
+            })
+
+        asset_version = session.create('AssetVersion', {
+            'asset': asset,
+            'task': root
+        })
+
+        session.commit()
 
         return {
             'success': True,
