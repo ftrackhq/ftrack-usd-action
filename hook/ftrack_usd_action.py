@@ -4,11 +4,11 @@
 
 import logging
 import tempfile
-
+import os
 from ftrack_action_handler.action import BaseAction
 import ftrack_api
 import sys
-sys.path.append('/home/ftrackwork/.local/lib/python')
+sys.path.append(os.path.expanduser('~/.local/lib/python'))
 
 from pxr import Usd, UsdGeom
 
@@ -32,7 +32,7 @@ class USDAction(BaseAction):
         return False
 
     def launch(self, session, entities, event):
-        temp = tempfile.NamedTemporaryFile(suffix='.usda').name
+        temp = tempfile.NamedTemporaryFile(suffix='.usda', delete=False).name
         usd_stage = Usd.Stage.CreateNew(temp)
 
         entity_type, entity_id = entities[0]
@@ -80,6 +80,15 @@ class USDAction(BaseAction):
             'asset': asset,
             'task': root
         })
+        session.commit()
+
+        asset_version.create_component(
+            temp,
+            data={
+                'name': 'usd'
+            },
+            location='auto'
+        )
 
         session.commit()
 
