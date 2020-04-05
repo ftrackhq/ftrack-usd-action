@@ -54,9 +54,44 @@ class USDAction(BaseAction):
                         ]
                     )
                 ).replace(' ', '_').lower()
-                xform = usd_stage.DefinePrim(ctx_path, 'Xform')
 
+                # create context path
+                ctx_xform = usd_stage.DefinePrim(ctx_path, 'Xform')
+
+                assets = session.query(
+                    'select versions from Asset where parent.id is "{}"'.format(child['parent']['id'])
+                ).all()
+
+                if not assets:
+                    # no asset version found....    
+                    continue
+                
+                for asset in assets:
+                    asset_name = '_'.join([asset['type']['short'], asset['name']]).replace(' ', '_').lower()
+                    asset_path = os.path.join(ctx_path, asset_name)
+                    # create asset path
+                    asset_xform = usd_stage.DefinePrim(asset_path, 'Xform')
+
+                    # create prim variant for versions
+                    version_variant = asset_xform.GetVariantSets().AddVariantSet('versions')
+                    for asset_versions in asset['versions']:
+                        # add version as usd variant
+                        version_variant.AddVariant('version_v{}'.format(asset_versions['version']))
+
+                        # for component in asset_version['components']:
+                        #     file_path = None
+                        #     try:
+                        #         file_path =  location.get_filesystem_path(component)
+                        #     except Exception as error:
+                        #         # print error
+                        #         pass
+
+                #reset root to child
                 root = child
+                                
+
+
+
         
         usd_stage.GetRootLayer().Save()
 
