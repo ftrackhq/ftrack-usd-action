@@ -10,7 +10,7 @@ import ftrack_api
 import sys
 sys.path.append(os.path.expanduser('~/.local/lib/python'))
 
-from pxr import Usd, UsdGeom
+from pxr import Usd,Sdf
 
 
 class USDAction(BaseAction):
@@ -34,6 +34,7 @@ class USDAction(BaseAction):
     def launch(self, session, entities, event):
         temp = tempfile.NamedTemporaryFile(suffix='.usda', delete=False).name
         usd_stage = Usd.Stage.CreateNew(temp)
+        location = session.pick_location()
 
         entity_type, entity_id = entities[0]
         root = self.session.get(entity_type, entity_id)
@@ -55,44 +56,69 @@ class USDAction(BaseAction):
                     )
                 ).replace(' ', '_').lower()
 
-                # create context path
-                ctx_xform = usd_stage.DefinePrim(ctx_path, 'Xform')
 
                 assets = session.query(
-                    'select versions from Asset where parent.id is "{}"'.format(child['parent']['id'])
+                    'select versions from Asset where parent.id is "{}" and type.name is "Geometry"'.format(
+                        child['parent']['id']
+                    )
                 ).all()
 
-                if not assets:
-                    # no asset version found....    
-                    continue
-                
                 for asset in assets:
-                    asset_name = '_'.join([asset['type']['short'], asset['name']]).replace(' ', '_').lower()
+                    if not asset['versions']:
+                        continue
+
+                    asset_name = '_'.join(
+                        [asset['type']['short'], asset['name']]).replace(' ',
+                                                                         '_').lower()
                     asset_path = os.path.join(ctx_path, asset_name)
-                    # create asset path
+
                     asset_xform = usd_stage.DefinePrim(asset_path, 'Xform')
+                    version_variant = asset_xform.GetVariantSets().AddVariantSet(
+                        'versions')
 
-                    # create prim variant for versions
-                    version_variant = asset_xform.GetVariantSets().AddVariantSet('versions')
-                    for asset_versions in asset['versions']:
-                        # add version as usd variant
-                        version_variant.AddVariant('version_v{}'.format(asset_versions['version']))
+                    for asset_version in asset['versions']:
+                        version = 'v{}'.format(asset_version['version'])
 
-                        # for component in asset_version['components']:
-                        #     file_path = None
-                        #     try:
-                        #         file_path =  location.get_filesystem_path(component)
-                        #     except Exception as error:
-                        #         # print error
-                        #         pass
+                        for component in asset_version['components']:
 
-                #reset root to child
+                            if (
+                                    not component['name'].startswith('usd_') or
+                                    not component['file_type'].startswith(
+                                        '.usd')
+                            ):
+                                continue
+
+                            file_path = None
+                            try:
+                                file_path = location.get_filesystem_path(
+                                    component)
+                            except Exception as error:
+                                stage.RemovePrim(asset_path)
+                                print error
+                                continue
+
+                            component_name = component['name'].replace(' ',
+                                                                       '_').replace(
+                                '-', '_').lower()
+                            component_path = os.path.join(asset_path,
+                                                          'component_{}'.format(
+                                                              component_name))
+                            component_xform = usd_stage.DefinePrim(component_path,
+                                                               'Mesh')
+
+                            version_variant.AddVariant(version)
+                            version_variant.SetVariantSelection(version)
+
+                            print 'creating component path {} with version variant {}'.format(
+                                component_path, version)
+
+                            with version_variant.GetVariantEditContext() as ctx:
+                                component_xform.SetPayload(
+                                    Sdf.Payload(file_path))
+
                 root = child
                                 
 
-
-
-        
         usd_stage.GetRootLayer().Save()
 
         # publish to context
