@@ -10,9 +10,6 @@ from pkg_resources import parse_version
 import pip
 
 
-if parse_version(pip.__version__) < parse_version('19.3.0'):
-    raise ValueError('Pip should be version 19.3.0 or higher')
-
 from pip._internal import main as pip_main  # pip >= 10
 
 from setuptools import setup, find_packages, Command
@@ -25,17 +22,9 @@ README_PATH = os.path.join(ROOT_PATH, 'README.rst')
 RESOURCE_PATH = os.path.join(ROOT_PATH, 'resource')
 HOOK_PATH = os.path.join(RESOURCE_PATH, 'hook')
 
-# Read version from source.
-with open(os.path.join(
-    SOURCE_PATH, 'ftrack_usd', '_version.py'
-)) as _version_file:
-    VERSION = re.match(
-        r'.*__version__ = \'(.*?)\'', _version_file.read(), re.DOTALL
-    ).group(1)
-
 
 STAGING_PATH = os.path.join(
-    BUILD_PATH, 'ftrack-templated-structure-{0}'.format(VERSION)
+    BUILD_PATH, 'ftrack-templated-structure-{0}'
 )
 
 
@@ -57,6 +46,9 @@ class BuildPlugin(Command):
         import setuptools_scm
         release = setuptools_scm.get_version()
         VERSION = '.'.join(release.split('.')[:3])
+        global STAGING_PATH
+        STAGING_PATH = STAGING_PATH.format(VERSION)
+
         # Clean staging path
         shutil.rmtree(STAGING_PATH, ignore_errors=True)
 
@@ -66,7 +58,7 @@ class BuildPlugin(Command):
             os.path.join(STAGING_PATH, 'hook')
         )
 
-        pip_main.main(
+        pip_main(
             [
                 'install',
                 '.',
@@ -94,7 +86,6 @@ __version__ = {version!r}
 # Call main setup.
 setup(
     name='ftrack-usd',
-    version=VERSION,
     description='ftrack usd  example.',
     long_description=open(README_PATH).read(),
     keywords='ftrack, integration, connect',
@@ -106,14 +97,13 @@ setup(
     package_dir={
         '': 'source'
     },
-    setup_required = [
+    setup_requires=[
         'setuptools>=30.3.0',
         'setuptools_scm',
     ],
     install_requires=[
         'ftrack-action-handler',
-    ],
-    tests_require=[
+        #'pxr' this has to be built and made available in the PYTHONPATH
     ],
     zip_safe=False,
     use_scm_version={

@@ -1,2 +1,6 @@
 *.pyc
 .idea/**
+build/**
+.eggs/**
+dist/**
+source/ftrack_usd/_version.py
