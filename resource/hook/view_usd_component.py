@@ -195,23 +195,23 @@ class ViewUsdComponentAction(object):
             self.launch
         )
 
-
-def register(session, **kw):
-    '''Register hooks.'''
-
-    logger = logging.getLogger(
-        'ftrack_connect:open-component-directory'
-    )
-
-    # Validate that session is an instance of ftrack_api.session.Session. If
-    # not, assume that register is being called from an old or incompatible API
-    # and return without doing anything.
-    if not isinstance(session, ftrack_api.Session):
-        logger.debug(
-            'Not subscribing plugin as passed argument {0!r} is not an '
-            'Session instance.'.format(session)
-        )
-        return
-
-    action = ViewUsdComponentAction(session, logger)
-    action.register()
+#
+# def register(session, **kw):
+#     '''Register hooks.'''
+#
+#     logger = logging.getLogger(
+#         'ftrack_connect:open-component-directory'
+#     )
+#
+#     # Validate that session is an instance of ftrack_api.session.Session. If
+#     # not, assume that register is being called from an old or incompatible API
+#     # and return without doing anything.
+#     if not isinstance(session, ftrack_api.Session):
+#         logger.debug(
+#             'Not subscribing plugin as passed argument {0!r} is not an '
+#             'Session instance.'.format(session)
+#         )
+#         return
+#
+#     action = ViewUsdComponentAction(session, logger)
+#     action.register()

@@ -104,6 +104,7 @@ setup(
     ],
     install_requires=[
         'ftrack-action-handler',
+        'ftrack-python-api'
         #'pxr' this has to be built and made available in the PYTHONPATH
     ],
     zip_safe=False,
