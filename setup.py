@@ -14,7 +14,6 @@ from pip._internal import main as pip_main  # pip >= 10
 
 from setuptools import setup, find_packages, Command
 
-
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 BUILD_PATH = os.path.join(ROOT_PATH, 'build')
 SOURCE_PATH = os.path.join(ROOT_PATH, 'source')
@@ -24,7 +23,7 @@ HOOK_PATH = os.path.join(RESOURCE_PATH, 'hook')
 
 
 STAGING_PATH = os.path.join(
-    BUILD_PATH, 'ftrack-templated-structure-{0}'
+    BUILD_PATH, 'ftrack-usd-{0}'
 )
 
 
@@ -70,11 +69,12 @@ class BuildPlugin(Command):
         result_path = shutil.make_archive(
             os.path.join(
                 BUILD_PATH,
-                'ftrack-templated-structure-{0}'.format(VERSION)
+                'ftrack-usd-{0}'.format(VERSION)
             ),
             'zip',
             STAGING_PATH
         )
+
 
 version_template = '''
 # :coding: utf-8
@@ -83,10 +83,11 @@ version_template = '''
 __version__ = {version!r}
 '''
 
+
 # Call main setup.
 setup(
     name='ftrack-usd',
-    description='ftrack usd  example.',
+    description='ftrack usd example.',
     long_description=open(README_PATH).read(),
     keywords='ftrack, integration, connect',
     url='https://bitbucket.org/l_angeli/ftrack-usd-action',
