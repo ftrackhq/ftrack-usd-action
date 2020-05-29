@@ -26,6 +26,21 @@ class BaseUSDCompositingAction(object):
         temp = tempfile.NamedTemporaryFile(suffix='.{}'.format(ext), delete=False).name
         return temp
 
+    def get_component(self, asset, component_name, task_name, status_name):
+        query = (
+            'select name, version.task.type.name, version.asset.id, version.status.name from Component where'
+            ' version.asset.id is "{0}"'
+            ' and version.status.name is "{1}"'
+            ' and name like "{2}%"'
+            ' and version.task.type.name is "{3}"'
+            ' order by version.version descending'
+        ).format(
+            asset['id'], status_name, component_name, task_name
+        )
+
+        return self.session.query(query).first()
+
+
     def get_assets_ctx_path(self, root, asset_type):
         all_assets = []
         while root['descendants']:
@@ -43,7 +58,7 @@ class BaseUSDCompositingAction(object):
                 ).replace(' ', '_').lower()
 
                 assets = self.session.query(
-                    'select versions from Asset where parent.id is "{}" and type.name is "{}"'.format(
+                    'select name, type.name, versions from Asset where parent.id is "{}" and type.name is "{}"'.format(
                         child['parent']['id'], asset_type
                     )
                 ).all()

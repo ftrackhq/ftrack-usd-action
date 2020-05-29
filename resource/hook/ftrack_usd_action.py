@@ -47,13 +47,9 @@ class USDAction(BaseAction, BaseUSDCompositingAction):
         temp_file = self.get_tmp_file()
         entity_type, entity_id = entities[0]
         root = self.session.get(entity_type, entity_id)
-        print 'launching for', root
 
         with UsdCtxStage(temp_file) as usd_stage:
-            print 'stage', usd_stage
-
             results = self.get_assets_ctx_path(root, 'Geometry')
-            print 'asets', results
 
         self.publish_result(root, temp_file, self.asset_name, self.asset_type)
 
