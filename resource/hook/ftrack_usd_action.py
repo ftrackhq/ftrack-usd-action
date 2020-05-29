@@ -5,12 +5,21 @@
 import logging
 import tempfile
 import os
-from ftrack_action_handler.action import BaseAction
-import ftrack_api
+
 import sys
+
 sys.path.append(os.path.expanduser('~/.local/lib/python'))
 
 from pxr import Usd,Sdf
+
+
+dependencies_directory = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'dependencies')
+
+)
+sys.path.append(dependencies_directory)
+from ftrack_action_handler.action import BaseAction
+import ftrack_api
 
 
 class USDAction(BaseAction):

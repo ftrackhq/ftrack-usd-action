@@ -5,12 +5,21 @@ import logging
 import os
 import sys
 import tempfile
-
-import ftrack_api
-import ftrack
-
-sys.path.append(os.path.expanduser('~/.local/lib/bin'))
 import subprocess
+
+
+# add pxr libraries
+sys.path.append(os.path.expanduser('~/.local/lib/bin'))
+
+# add local dependencies
+
+dependencies_directory = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'dependencies')
+
+)
+
+sys.path.append(dependencies_directory)
+import ftrack_api
 
 
 class ConvertUsdComponentAction(object):
