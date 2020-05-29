@@ -72,12 +72,12 @@ class USDAction(BaseAction):
                                                                          '_').lower()
                     asset_path = os.path.join(ctx_path, asset_name)
 
-                    asset_xform = usd_stage.DefinePrim(asset_path, 'Xform')
-                    version_variant = asset_xform.GetVariantSets().AddVariantSet(
-                        'versions')
+                    # asset_xform = usd_stage.DefinePrim(asset_path, 'Xform')
+                    # version_variant = asset_xform.GetVariantSets().AddVariantSet(
+                    #     'versions')
 
                     for asset_version in asset['versions']:
-                        version = 'v{}'.format(asset_version['version'])
+                        # version = 'v{}'.format(asset_version['version'])
 
                         for component in asset_version['components']:
 
@@ -106,18 +106,17 @@ class USDAction(BaseAction):
                             component_xform = usd_stage.DefinePrim(component_path,
                                                                'Mesh')
 
-                            version_variant.AddVariant(version)
-                            version_variant.SetVariantSelection(version)
-
-                            print 'creating component path {} with version variant {}'.format(
-                                component_path, version)
-
-                            with version_variant.GetVariantEditContext() as ctx:
-                                component_xform.SetPayload(
-                                    Sdf.Payload(file_path))
+                            # version_variant.AddVariant(version)
+                            # version_variant.SetVariantSelection(version)
+                            #
+                            # print 'creating component path {} with version variant {}'.format(
+                            #     component_path, version)
+                            #
+                            # with version_variant.GetVariantEditContext() as ctx:
+                            #     component_xform.SetPayload(
+                            #         Sdf.Payload(file_path))
 
                 root = child
-                                
 
         usd_stage.GetRootLayer().Save()
 
